@@ -10,6 +10,13 @@ import { Modal } from '../components/Modal';
 import { ListItemForm } from '../components/ListItemForm';
 import { ItemDetailModal } from '../components/ItemDetailModal';
 import { UserProfile } from '../components/UserProfile';
+import { BorrowRequestsPanel } from '../components/BorrowRequestsPanel';
+import { ChatInterface } from '../components/ChatInterface';
+import { ReviewForm } from '../components/ReviewForm';
+import { TransactionHistory } from '../components/TransactionHistory';
+import { ActiveTransactions } from '../components/ActiveTransactions';
+import { Tabs } from '../components/Tabs';
+import { MessageCircle, ClipboardList, History } from 'lucide-react';
 import { mockItems, mockUsers } from '../lib/mockData';
 import type { Item, User } from '../lib/types';
 
@@ -23,6 +30,12 @@ export default function HomePage() {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  // New state for additional features
+  const [activeTab, setActiveTab] = useState<'browse' | 'requests' | 'transactions'>('browse');
+  const [showBorrowRequests, setShowBorrowRequests] = useState(false);
+  const [chatUser, setChatUser] = useState<{ user: User; itemTitle: string } | null>(null);
+  const [reviewTransaction, setReviewTransaction] = useState<any>(null);
 
   // Initialize user and location
   useEffect(() => {
@@ -120,6 +133,29 @@ export default function HomePage() {
     setIsListModalOpen(false);
   };
 
+  // New handlers
+  const handleMessageUser = (userId: string, itemTitle: string) => {
+    const otherUser = mockUsers.find(u => u.userId === userId);
+    if (otherUser) {
+      setChatUser({ user: otherUser, itemTitle });
+    }
+  };
+
+  const handleReviewTransaction = (transaction: any) => {
+    setReviewTransaction(transaction);
+  };
+
+  const handleSubmitReview = (review: any) => {
+    console.log('Review submitted:', review);
+    setReviewTransaction(null);
+    // In production, this would save to backend
+  };
+
+  const handleMarkReturned = (transactionId: string) => {
+    console.log('Marking transaction as returned:', transactionId);
+    // In production, this would call smart contract
+  };
+
   const categories = ['all', 'tools', 'electronics', 'books', 'sports', 'kitchen', 'garden', 'other'];
 
   if (!currentUser) {
@@ -135,6 +171,12 @@ export default function HomePage() {
     );
   }
 
+  const mainTabs = [
+    { id: 'browse', label: 'Browse Items', icon: null },
+    { id: 'requests', label: 'Requests', icon: <ClipboardList className="w-4 h-4" /> },
+    { id: 'transactions', label: 'My Transactions', icon: <History className="w-4 h-4" /> }
+  ];
+
   return (
     <AppShell>
       <div className="space-y-6">
@@ -142,63 +184,119 @@ export default function HomePage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-text-primary">LendLocal</h1>
-            <p className="text-text-secondary">Discover items near you</p>
+            <p className="text-text-secondary">Borrow and lend everyday items with your neighbors</p>
           </div>
           <UserProfile user={currentUser} />
         </div>
 
-        {/* Search and Actions */}
-        <div className="space-y-4">
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search for items..."
-          />
-          
-          <div className="flex items-center justify-between">
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {categories.map(category => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
-                    selectedCategory === category
-                      ? 'bg-primary text-white'
-                      : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
-                  }`}
+        {/* Main Navigation Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="flex space-x-8">
+            {mainTabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center gap-2 ${
+                  activeTab === tab.id
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-text-secondary hover:text-text-primary hover:border-gray-300'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'browse' && (
+          <div className="space-y-6">
+            {/* Search and Actions */}
+            <div className="space-y-4">
+              <SearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search for items..."
+              />
+
+              <div className="flex items-center justify-between">
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {categories.map(category => (
+                    <button
+                      key={category}
+                      onClick={() => setSelectedCategory(category)}
+                      className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
+                        selectedCategory === category
+                          ? 'bg-primary text-white'
+                          : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
+                      }`}
+                    >
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </button>
+                  ))}
+                </div>
+
+                <Button
+                  variant="primary"
+                  onClick={() => setIsListModalOpen(true)}
+                  className="ml-4"
                 >
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
-                </button>
+                  List Item
+                </Button>
+              </div>
+            </div>
+
+            {/* Items Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredItems.map(item => (
+                <ItemCard
+                  key={item.itemId}
+                  item={item}
+                  lender={mockUsers.find(u => u.userId === item.lenderUserId)!}
+                  userLocation={userLocation}
+                  onClick={() => setSelectedItem(item)}
+                />
               ))}
             </div>
-            
-            <Button
-              variant="primary"
-              onClick={() => setIsListModalOpen(true)}
-              className="ml-4"
-            >
-              List Item
-            </Button>
+
+            {filteredItems.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-text-secondary text-lg">No items found</p>
+                <p className="text-text-secondary">Try adjusting your search or category filter</p>
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
-        {/* Items Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredItems.map(item => (
-            <ItemCard
-              key={item.itemId}
-              item={item}
-              lender={mockUsers.find(u => u.userId === item.lenderUserId)!}
-              userLocation={userLocation}
-              onClick={() => setSelectedItem(item)}
+        {activeTab === 'requests' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-text-primary">Borrow Requests</h2>
+              <Button
+                variant="primary"
+                onClick={() => setShowBorrowRequests(true)}
+              >
+                <ClipboardList className="w-4 h-4 mr-2" />
+                Manage Requests
+              </Button>
+            </div>
+
+            <ActiveTransactions
+              currentUser={currentUser!}
+              onMessageUser={handleMessageUser}
+              onMarkReturned={handleMarkReturned}
             />
-          ))}
-        </div>
+          </div>
+        )}
 
-        {filteredItems.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-text-secondary text-lg">No items found</p>
-            <p className="text-text-secondary">Try adjusting your search or category filter</p>
+        {activeTab === 'transactions' && (
+          <div className="space-y-6">
+            <TransactionHistory
+              currentUser={currentUser!}
+              onReviewTransaction={handleReviewTransaction}
+              onMarkReturned={handleMarkReturned}
+            />
           </div>
         )}
 
@@ -222,6 +320,33 @@ export default function HomePage() {
             currentUser={currentUser}
             userLocation={userLocation}
             onClose={() => setSelectedItem(null)}
+          />
+        )}
+
+        {/* Borrow Requests Panel */}
+        {showBorrowRequests && (
+          <BorrowRequestsPanel onClose={() => setShowBorrowRequests(false)} />
+        )}
+
+        {/* Chat Interface */}
+        {chatUser && (
+          <ChatInterface
+            currentUser={currentUser!}
+            otherUser={chatUser.user}
+            itemTitle={chatUser.itemTitle}
+            onClose={() => setChatUser(null)}
+          />
+        )}
+
+        {/* Review Form */}
+        {reviewTransaction && (
+          <ReviewForm
+            reviewer={currentUser!}
+            reviewee={reviewTransaction.otherUser}
+            itemTitle={reviewTransaction.itemTitle}
+            transactionId={reviewTransaction.id}
+            onSubmit={handleSubmitReview}
+            onCancel={() => setReviewTransaction(null)}
           />
         )}
       </div>
