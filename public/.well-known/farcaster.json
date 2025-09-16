@@ -1,0 +1,30 @@
+{
+  "accountAssociation": {
+    "header": "",
+    "payload": "",
+    "signature": ""
+  },
+  "frame": {
+    "version": "1",
+    "name": "LendLocal",
+    "subtitle": "Built with Zara",
+    "description": "LendLocal is a Base Mini App built with Zara.",
+    "iconUrl": "https://0co.to/images/zara-2.png",
+    "homeUrl": "https://b34ece8102454567aaf5e8c8c1e1d7f5-9kka.vercel.app",
+    "splashImageUrl": "https://b34ece8102454567aaf5e8c8c1e1d7f5-9kka.vercel.app/splash.png",
+    "splashBackgroundColor": "#000000",
+    "heroImageUrl": "https://b34ece8102454567aaf5e8c8c1e1d7f5-9kka.vercel.app/image.png",
+    "tagline": "LendLocal",
+    "screenshotUrls": [
+      "https://b34ece8102454567aaf5e8c8c1e1d7f5-9kka.vercel.app/screenshot.png",
+      "https://b34ece8102454567aaf5e8c8c1e1d7f5-9kka.vercel.app/screenshot.png"
+    ],
+    "primaryCategory": "social",
+    "tags": [
+      "base",
+      "miniapp",
+      "onchainkit"
+    ],
+    "webhookUrl": "https://b34ece8102454567aaf5e8c8c1e1d7f5-9kka.vercel.app/api/webhook"
+  }
+}
