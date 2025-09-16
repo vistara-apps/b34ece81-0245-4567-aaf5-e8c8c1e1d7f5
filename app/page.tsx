@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useMiniKit } from '@coinbase/minikit';
 import { AppShell } from '../components/AppShell';
 import { ItemCard } from '../components/ItemCard';
 import { SearchBar } from '../components/SearchBar';
@@ -14,7 +13,6 @@ import { mockItems, mockUsers } from '../lib/mockData';
 import type { Item, User } from '../lib/types';
 
 export default function HomePage() {
-  const { user } = useMiniKit();
   const [items, setItems] = useState<Item[]>(mockItems);
   const [filteredItems, setFilteredItems] = useState<Item[]>(mockItems);
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,27 +24,8 @@ export default function HomePage() {
 
   // Initialize user and location
   useEffect(() => {
-    // Set current user from MiniKit context or create mock user
-    if (user) {
-      const existingUser = mockUsers.find(u => u.farcasterId === user.fid?.toString());
-      if (existingUser) {
-        setCurrentUser(existingUser);
-      } else {
-        // Create new user from MiniKit data
-        const newUser: User = {
-          userId: `user_${Date.now()}`,
-          farcasterId: user.fid?.toString() || '',
-          displayName: user.displayName || 'Anonymous User',
-          profilePicUrl: user.pfpUrl || '',
-          rating: 5.0,
-          bio: 'New to LendLocal!'
-        };
-        setCurrentUser(newUser);
-      }
-    } else {
-      // Use mock user for development
-      setCurrentUser(mockUsers[0]);
-    }
+    // Use mock user for development
+    setCurrentUser(mockUsers[0]);
 
     // Request location permission
     if (navigator.geolocation) {
@@ -64,7 +43,7 @@ export default function HomePage() {
         }
       );
     }
-  }, [user]);
+  }, []);
 
   // Filter items based on search and category
   useEffect(() => {
